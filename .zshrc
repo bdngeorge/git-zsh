@@ -4,6 +4,12 @@ export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
+# Start ssh-agent silently if not already running
+if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
+    eval $(ssh-agent -s) >/dev/null
+    ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1
+fi
+
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
@@ -72,7 +78,6 @@ ZSH_THEME="bdn-monokai"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
 	git
-	ssh-agent
 	command-not-found
 	nvm
 	zsh-autosuggestions
@@ -80,9 +85,6 @@ plugins=(
 	# Must be last
 	zsh-syntax-highlighting
 )
-
-# Define which keys to load automatically
-zstyle ':omz:plugins:ssh-agent' identities id_github id_rsa_nouvel
 
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
 autoload -U compinit && compinit
@@ -119,7 +121,7 @@ alias zshconfig="mate ~/.zshrc"
 alias ohmyzsh="mate ~/.oh-my-zsh"
 alias repos="cd ~/source/repos"
 
-# Adds a newline for every prompt other than the first
+# Adds a newline before every prompt except the first
 setopt PROMPT_SUBST
 autoload -Uz add-zsh-hook
 
