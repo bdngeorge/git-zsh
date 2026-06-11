@@ -1,3 +1,6 @@
+# Uncomment to run profiler
+zmodload zsh/zprof
+
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
@@ -30,7 +33,7 @@ ZSH_THEME="bdn-monokai"
 # HYPHEN_INSENSITIVE="true"
 
 # Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
+zstyle ':omz:update' mode disabled  # disable automatic updates
 # zstyle ':omz:update' mode auto      # update automatically without asking
 # zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
@@ -38,7 +41,7 @@ ZSH_THEME="bdn-monokai"
 # zstyle ':omz:update' frequency 13
 
 # Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
+DISABLE_MAGIC_FUNCTIONS="true"
 
 # Uncomment the following line to disable colors in ls.
 # DISABLE_LS_COLORS="true"
@@ -58,7 +61,7 @@ ZSH_THEME="bdn-monokai"
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
@@ -77,17 +80,31 @@ ZSH_THEME="bdn-monokai"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-	git
-	command-not-found
 	nvm
 	zsh-autosuggestions
-
 	# Must be last
 	zsh-syntax-highlighting
 )
 
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
-autoload -U compinit && compinit
+
+# Force compinit to ignore insecure directories (must be set before sourcing OMZ)
+ZSH_DISABLE_COMPFIX=true
+
+# OMZ always calls compinit without -C, which regenerates .zcompdump every
+# session and causes zrecompile to fire. Wrap compinit to inject -C when the
+# dump is less than 24h old, then let OMZ's call hit our wrapper.
+autoload -Uz compinit
+() {
+  local dump="${ZDOTDIR:-$HOME}/.zcompdump-${HOST/.*/}-${ZSH_VERSION}"
+  if [[ -s "$dump" && -n "$dump"(#qN.mh-24) ]]; then
+    function compinit() {
+      unfunction compinit
+      autoload -Uz compinit
+      compinit -C "$@"
+    }
+  fi
+}
 
 source $ZSH/oh-my-zsh.sh
 
@@ -121,7 +138,7 @@ alias zshconfig="mate ~/.zshrc"
 alias ohmyzsh="mate ~/.oh-my-zsh"
 alias repos="cd ~/source/repos"
 
-# Adds a newline before every prompt except the first
+# Adds a newline for every prompt other than the first
 setopt PROMPT_SUBST
 autoload -Uz add-zsh-hook
 
@@ -138,3 +155,6 @@ _add_prompt_newline() {
 }
 
 add-zsh-hook precmd _add_prompt_newline
+
+# Uncomment to run profiler
+zprof
