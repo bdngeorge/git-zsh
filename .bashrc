@@ -37,7 +37,6 @@ fi
 unset rc
 
 # Start ssh-agent silently if not already running
-if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
-    eval $(ssh-agent -s) >/dev/null
+if [ -z "$SSH_AUTH_SOCK" ] || [ -S "$SSH_AUTH_SOCK" ]; then
     ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1
 fi
